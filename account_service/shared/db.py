@@ -1,6 +1,7 @@
 import os
 
 from retrying import retry
+from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -19,6 +20,5 @@ Base.query = session.query_property
 
 @retry(wait_fixed=2000, stop_max_attempt_number=10)
 def init_db():
-    # import models
-    
+    from account_service.models.account import Account
     Base.metadata.create_all(bind=engine)
