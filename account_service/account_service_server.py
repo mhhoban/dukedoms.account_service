@@ -5,7 +5,7 @@ from flask import Flask, request
 from flask_api import status
 from sqlalchemy.exc import SQLAlchemyError
 
-from account_service.shared.db import session, init_db
+from account_service.shared.db import init_db
 
 app = connexion.App(__name__, specification_dir='swagger/')
 

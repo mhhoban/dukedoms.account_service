@@ -3,6 +3,7 @@ import os
 from retrying import retry
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.declarative import declarative_base
 
 from account_service.constants import URLS
@@ -13,12 +14,23 @@ else:
     env= 'container'
 
 engine = create_engine(URLS[env].rdbs)
-session = scoped_session(sessionmaker(bind=engine))
-
 Base = declarative_base()
-Base.query = session.query_property
+
+
+def get_new_db_session():
+    """
+    creates and returns a new session from the rdbs engine
+    """
+    return scoped_session(sessionmaker(bind=engine))
 
 @retry(wait_fixed=2000, stop_max_attempt_number=10)
 def init_db():
     from account_service.models.account import Account
-    Base.metadata.create_all(bind=engine)
+    try:
+        session = get_new_db_session()
+        Base.query = session.query_property
+        Base.metadata.create_all(bind=engine)
+    except SQLAlchemyError:
+        raise SQLAlchemyError
+    finally:
+        session.close()
