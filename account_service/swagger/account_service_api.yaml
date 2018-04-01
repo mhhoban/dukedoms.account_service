@@ -85,9 +85,7 @@ paths:
           required: true
       responses:
         200:
-          description: Players all exist
-        404:
-          description: not all players exist
+          description: successful
           schema:
             $ref: '#/definitions/UnverifiedPlayers'
 
@@ -145,9 +143,12 @@ definitions:
         items:
           type: integer
   UnverifiedPlayers:
-    type: array
-    items:
-      type: string
+    type: object
+    properties:
+      UnverifiedPlayers:
+        type: array
+        items:
+          type: string
   AccountIdMappings:
     type: array
     items:

@@ -5,10 +5,14 @@ from flask import Flask, request
 from flask_api import status
 from account_service.shared.db import get_new_db_session
 from account_service.models.account import Account
+from sqlalchemy.exc import SQLAlchemyError
 
-from swagger_server.models.account_info import (
-    AccountInfo
+from account_service.exceptions.account_service_exceptions import (
+    NoSuchAccountException
 )
+from swagger_server.models.account_info import AccountInfo
+from swagger_server.models.unverified_players import UnverifiedPlayers
+
 
 def get_player_info(accountId):
     """
@@ -19,8 +23,8 @@ def get_player_info(accountId):
     try:
         account = retrieve_account_from_db(player_id)
         return populate_account_info(account), status.HTTP_200_OK
-    except ValueError:
-        return status.HTTP_404_NOT_FOUND
+    except NoSuchAccountException:
+        return None, status.HTTP_404_NOT_FOUND
 
 def get_account_ids():
     """
@@ -30,25 +34,40 @@ def get_account_ids():
 
     try:
         return [{account: retrieve_account_id_from_db(account)} for account in requested_accounts], status.HTTP_200_OK
-    except ValueError:
+    except NoSuchAccountException:
         return status.HTTP_404_NOT_FOUND
 
 
 def verify_accounts():
-    pass
+    """
+    verify that all requested accounts exist
+    """
+    requested_accounts = request.args.get('playerList').split(',')
+
+    accounts_missing = []
+    for account in requested_accounts:
+        try:
+            retrieved_account = retrieve_account_id_from_db(account)
+        except NoSuchAccountException:
+            accounts_missing.append(account)
+    unverified_players = UnverifiedPlayers(unverified_players=accounts_missing)
+
+    return unverified_players.to_dict(), status.HTTP_200_OK
+
 
 def retrieve_account_id_from_db(email):
     """
     lookup and return a given account id from the database
     """
     session = get_new_db_session()
+
     try:
         account = session.query(Account).filter(Account.email == email).first()
         if account:
             return account.id
         else:
-            raise ValueError
-    except:
+            raise NoSuchAccountException
+    except SQLAlchemyError:
         raise SQLAlchemyError
     finally:
         session.close()
@@ -59,13 +78,9 @@ def retrieve_account_from_db(id):
     """
     try:
         session = get_new_db_session()
-        account = session.query(Account).filter(Account.id == id).first()
-        if account:
-            return account
-        else:
-            raise ValueError
+        return session.query(Account).filter(Account.id == id).first()
     except SQLAlchemyError:
-        raise SQLAlchemyError
+        raise NoSuchAccountException
     finally:
         session.close()
 def populate_account_info(account):
