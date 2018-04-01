@@ -31,12 +31,12 @@ def get_player_info(accountId):
 
 def get_account_ids():
     """
-    get player Id for given email address
+    get player Id for given email addresses
     """
     requested_accounts = request.args.get('requestedAccounts').split(',')
 
     try:
-        return [{account: retrieve_account_id_from_db(account)} for account in requested_accounts], status.HTTP_200_OK
+        return {'accountIdMappings':[{account: retrieve_account_id_from_db(account)} for account in requested_accounts]}, status.HTTP_200_OK
     except NoSuchAccountException:
         return status.HTTP_404_NOT_FOUND
 

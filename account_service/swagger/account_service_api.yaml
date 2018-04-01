@@ -1,7 +1,7 @@
 swagger: "2.0"
 info:
   title: Dukedoms of Daleria Account Service API
-  version: "0.1.1"
+  version: "0.1.2"
 
 paths:
   /newAccount:
@@ -150,9 +150,12 @@ definitions:
         items:
           type: string
   AccountIdMappings:
-    type: array
-    items:
-      type: object
+    type: object
+    properties:
+      accountIdMappings:
+        type: array
+        items:
+          type: object
   InvitationBatch:
     type: object
     properties:
