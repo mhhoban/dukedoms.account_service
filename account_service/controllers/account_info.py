@@ -7,6 +7,9 @@ from account_service.shared.db import get_new_db_session
 from account_service.models.account import Account
 from sqlalchemy.exc import SQLAlchemyError
 
+from account_service.shared.account_operations import (
+    retrieve_account_id_from_db
+)
 from account_service.exceptions.account_service_exceptions import (
     NoSuchAccountException
 )
@@ -54,24 +57,6 @@ def verify_accounts():
 
     return unverified_players.to_dict(), status.HTTP_200_OK
 
-
-def retrieve_account_id_from_db(email):
-    """
-    lookup and return a given account id from the database
-    """
-    session = get_new_db_session()
-
-    try:
-        account = session.query(Account).filter(Account.email == email).first()
-        if account:
-            return account.id
-        else:
-            raise NoSuchAccountException
-    except SQLAlchemyError:
-        raise SQLAlchemyError
-    finally:
-        session.close()
-
 def retrieve_account_from_db(id):
     """
     lookup and return full account from db
@@ -92,7 +77,6 @@ def populate_account_info(account):
         account_id=account.id,
         active_player_ids=account.active_player_ids,
         pending_player_ids=account.pending_player_ids,
-        game_invitations=account.game_invitations
+        game_invitations=json.loads(account.game_invitations)
     )
-
     return account_info.to_dict()
