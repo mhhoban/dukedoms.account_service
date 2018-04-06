@@ -4,6 +4,10 @@ from account_service.shared.db import get_new_db_session
 from account_service.models.account import Account
 from sqlalchemy.exc import SQLAlchemyError
 
+from account_service.exceptions.account_service_exceptions import (
+    NoSuchAccountException
+)
+
 def check_account_id_exists(account_id):
     """
     checks that given account id exists in db
