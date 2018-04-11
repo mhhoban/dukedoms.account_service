@@ -12,6 +12,8 @@ logger = logging.getLogger('account_service_server')
 logger.setLevel(logging.DEBUG)
 
 fh = logging.FileHandler('account_service.log')
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+fh.setFormatter(formatter)
 fh.setLevel(logging.DEBUG)
 logger.addHandler(fh)
 
