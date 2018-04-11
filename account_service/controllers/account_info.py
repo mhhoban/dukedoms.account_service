@@ -13,19 +13,23 @@ from account_service.shared.account_operations import (
 from account_service.exceptions.account_service_exceptions import (
     NoSuchAccountException
 )
-from swagger_server.models.account_info import AccountInfo
+from swagger_server.models.account_info_list_player_accounts import AccountInfoListPlayerAccounts
+from swagger_server.models.account_info_list import AccountInfoList
 from swagger_server.models.unverified_players import UnverifiedPlayers
 
 
-def get_player_info(accountId):
+def get_player_info(accountIds):
     """
     endpoint for getting player account info
     """
-    player_id = accountId
+    player_ids = accountIds
 
     try:
-        account = retrieve_account_from_db(player_id)
-        return populate_account_info(account), status.HTTP_200_OK
+        accounts = [
+            populate_account_info(retrieve_account_from_db(player_id))
+            for player_id in player_ids
+        ]
+        return AccountInfoList(player_accounts=accounts).to_dict(), status.HTTP_200_OK
     except NoSuchAccountException:
         return None, status.HTTP_404_NOT_FOUND
 
@@ -36,6 +40,7 @@ def get_account_ids():
     requested_accounts = request.args.get('requestedAccounts').split(',')
 
     try:
+
         return {'accountIdMappings':[{account: retrieve_account_id_from_db(account)} for account in requested_accounts]}, status.HTTP_200_OK
     except NoSuchAccountException:
         return status.HTTP_404_NOT_FOUND
@@ -72,7 +77,7 @@ def populate_account_info(account):
     """
     populate swagger account info object with db account model data
     """
-    account_info = AccountInfo(
+    account_info = AccountInfoListPlayerAccounts(
         email=account.email,
         account_id=account.id,
         active_player_ids=account.active_player_ids,

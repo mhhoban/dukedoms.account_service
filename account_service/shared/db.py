@@ -1,4 +1,5 @@
 import os
+import logging
 
 from retrying import retry
 from sqlalchemy import create_engine
@@ -7,6 +8,8 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.declarative import declarative_base
 
 from account_service.constants import URLS
+
+logger = logging.getLogger('account_service_server')
 
 if os.environ.get('ACCOUNT_SERVICE_ENV') == 'local':
     env = 'local'
@@ -30,6 +33,7 @@ def init_db():
         session = get_new_db_session()
         Base.query = session.query_property
         Base.metadata.create_all(bind=engine)
+        logger.info('Created all models successfully')
     except SQLAlchemyError:
         raise SQLAlchemyError
     finally:
