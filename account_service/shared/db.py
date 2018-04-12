@@ -33,7 +33,7 @@ def init_db():
         session = get_new_db_session()
         Base.query = session.query_property
         Base.metadata.create_all(bind=engine)
-        logger.info('Created all models successfully')
+        logger.debug('Created all SQLA models successfully')
     except SQLAlchemyError:
         raise SQLAlchemyError
     finally:
