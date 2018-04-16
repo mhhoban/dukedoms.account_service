@@ -2,10 +2,9 @@ version: '3.1'
 
 services:
   db:
-    image: postgres
+    image: mhhoban/dukedoms_rdbs
     environment:
       POSTGRES_USER: dukedoms
       POSTGRES_PASSWORD: daleria
-      POSTGRES_DB: account_service
     ports:
       - 5432:5432

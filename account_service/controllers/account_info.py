@@ -105,3 +105,6 @@ def populate_account_info(account):
         game_invitations=json.loads(account.game_invitations)
     )
     return account_info.to_dict()
+
+def get_game_invites():
+    pass

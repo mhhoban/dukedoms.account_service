@@ -51,3 +51,6 @@ def invite_accounts():
         )
     )
     return None, status.HTTP_202_ACCEPTED
+
+def process_game_invite():
+    pass
