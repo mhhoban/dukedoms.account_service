@@ -8,6 +8,7 @@ setup(
   include_package_data=True,
   install_requires=[
     'addict',
+    'bravado',
     'connexion',
     'flask',
     'flask_api',

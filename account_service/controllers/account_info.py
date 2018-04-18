@@ -9,7 +9,6 @@ from account_service.models.account import Account
 from sqlalchemy.exc import SQLAlchemyError
 
 from account_service.shared.account_operations import (
-    retrieve_account_from_db,
     retrieve_account_id_from_db
 )
 from account_service.exceptions.account_service_exceptions import (
@@ -122,3 +121,20 @@ def populate_account_info(account):
         game_invitations=json.loads(account.game_invitations)
     )
     return account_info.to_dict()
+
+def retrieve_account_from_db(id):
+    """
+    lookup and return full account from db
+    """
+    logger.debug('Trying to retreive account id {} from db'.format(id))
+    try:
+        session = get_new_db_session()
+        account = session.query(Account).filter(Account.id == id).first()
+        logger.debug('found account for id {} in db'.format(id))
+        return account
+    except SQLAlchemyError:
+        logger.error('unable to find account for id {} in db,'
+                     'raising NoSuchAccountException'.format(id))
+        raise NoSuchAccountException
+    finally:
+        session.close()

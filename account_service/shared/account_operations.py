@@ -65,20 +65,3 @@ def game_invite(account_id=None, game_id=None):
         raise SQLAlchemyError
     finally:
         session.close()
-
-def retrieve_account_from_db(id):
-    """
-    lookup and return full account from db
-    """
-    logger.debug('Trying to retreive account id {} from db'.format(id))
-    try:
-        session = get_new_db_session()
-        account = session.query(Account).filter(Account.id == id).first()
-        logger.debug('found account for id {} in db'.format(id))
-        return account
-    except SQLAlchemyError:
-        logger.error('unable to find account for id {} in db,'
-                     'raising NoSuchAccountException'.format(id))
-        raise NoSuchAccountException
-    finally:
-        session.close()
