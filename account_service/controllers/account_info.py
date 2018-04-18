@@ -9,6 +9,7 @@ from account_service.models.account import Account
 from sqlalchemy.exc import SQLAlchemyError
 
 from account_service.shared.account_operations import (
+    retrieve_account_from_db,
     retrieve_account_id_from_db
 )
 from account_service.exceptions.account_service_exceptions import (
@@ -38,6 +39,7 @@ def get_player_info(accountIds):
         logger.debug('get_player_info unable for find account info')
         return None, status.HTTP_404_NOT_FOUND
 
+
 def get_account_ids():
     """
     get player Id for given email addresses
@@ -46,10 +48,40 @@ def get_account_ids():
     logger.debug('received get_account_ids request for {}'.format(requested_accounts))
 
     try:
-        logger.debug('returning account id mappings for {}'.format(requested_accounts))
-        return {'accountIdMappings':[{account: retrieve_account_id_from_db(account)} for account in requested_accounts]}, status.HTTP_200_OK
+        account_mappings = (
+            {'accountIdMappings':
+                [{account:
+                    retrieve_account_id_from_db(account)} for account in requested_accounts
+                ]
+            }
+        )
+
+        logger.debug('returning account id mappings {} for {}'.format(
+            account_mappings,
+            requested_accounts)
+        )
+        return account_mappings, status.HTTP_200_OK
     except NoSuchAccountException:
         logger.debug('unable to find requested account_ids')
+        return status.HTTP_404_NOT_FOUND
+
+
+def get_game_invites(accountId):
+    """
+    look up account, get game invites and return them
+    """
+    account_id = accountId
+    logger.debug('received get_game_invites request for {}'.format(account_id))
+
+    try:
+        account = retrieve_account_from_db(account_id)
+        game_invitations = json.loads(account.game_invitations)['game_invitation_ids']
+        logger.debug('found game invitations {} for account id {}').format(
+            game_invitations,
+            account_id
+        )
+        return {'gameIds': game_invitations}, status.HTTP_200_OK
+    except NoSuchAccountException:
         return status.HTTP_404_NOT_FOUND
 
 
@@ -77,22 +109,7 @@ def verify_accounts():
     )
     return unverified_players.to_dict(), status.HTTP_200_OK
 
-def retrieve_account_from_db(id):
-    """
-    lookup and return full account from db
-    """
-    logger.debug('Trying to retreive account id {} from db'.format(id))
-    try:
-        session = get_new_db_session()
-        account = session.query(Account).filter(Account.id == id).first()
-        logger.debug('found account for id {} in db'.format(id))
-        return account
-    except SQLAlchemyError:
-        logger.error('unable to find account for id {} in db,'
-                     'raising NoSuchAccountException'.format(id))
-        raise NoSuchAccountException
-    finally:
-        session.close()
+
 def populate_account_info(account):
     """
     populate swagger account info object with db account model data
@@ -105,6 +122,3 @@ def populate_account_info(account):
         game_invitations=json.loads(account.game_invitations)
     )
     return account_info.to_dict()
-
-def get_game_invites():
-    pass
