@@ -42,6 +42,24 @@ def retrieve_account_id_from_db(email):
     finally:
         session.close()
 
+def retrieve_account_email(account_id):
+    """
+    retreives and returns account email for given account_id
+    """
+    session = get_new_db_session()
+
+    try:
+        account = session.query(Account).filter(Account.id == account_id).first()
+        if account:
+            return account.email
+        else:
+            raise NoSuchAccountException
+    except SQLAlchemyError:
+        raise SQLAlchemyError
+    finally:
+        session.close()
+
+
 def game_invite(account_id=None, game_id=None):
     """
     invites given account to given game
