@@ -21,4 +21,4 @@ app = connexion.App(__name__, specification_dir='swagger/')
 
 app.add_api('account_service_api.yaml')
 init_db()
-app.run(port=5000)
+app.run(port=5002)
