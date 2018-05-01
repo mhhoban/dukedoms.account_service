@@ -12,6 +12,9 @@ from sqlalchemy.exc import SQLAlchemyError
 from account_service.exceptions.account_service_exceptions import (
     NoSuchAccountException
 )
+from account_service.controllers.account_info import (
+    get_account_ids
+)
 from account_service.shared.account_operations import (
     check_account_id_exists,
     game_invite,
@@ -70,7 +73,26 @@ def process_game_invite():
     account_email = retrieve_account_email(response_object['accountId'])
 
     if response_object['accept']:
-        send_invite_accept(game_id=response_object['gameId'], player_email=account_email)
+        packet = send_invite_accept(game_id=response_object['gameId'], player_email=account_email)
+
+        # TODO cleaner method for doing this
+        session = get_new_db_session()
+        account = session.query(Account).filter(Account.id == response_object['accountId']).first()
+
+        pending_player_ids = json.loads(account.pending_player_ids)
+        pending_player_ids['pending_player_ids'].append(packet.playerId)
+        session.query(Account).filter(Account.id == response_object['accountId']).update(
+            {'pending_player_ids': json.dumps(pending_player_ids)}
+        )
+
+        game_invites = json.loads(account.game_invitations)
+        game_invites['game_invitation_ids'].remove(response_object['gameId'])
+        session.query(Account).filter(Account.id == response_object['accountId']).update(
+            {'game_invitations': json.dumps(game_invites)}
+        )
+        session.commit()
+        session.close()
+
     else:
         send_invite_decline(game_id=response_object['gameId'], player_email=account_email)
 
@@ -86,7 +108,6 @@ def send_invite_accept(game_id=None, player_email=None):
             'playerEmail': player_email
         }
     ).result()
-
     return result
 
 def send_invite_decline(game_id=None, player_email=None):

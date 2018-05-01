@@ -38,7 +38,7 @@ def get_player_info(accountIds):
         logger.debug('get_player_info unable for find account info')
         return None, status.HTTP_404_NOT_FOUND
 
-
+# TODO Rename better
 def get_account_ids():
     """
     get player Id for given email addresses
@@ -75,7 +75,7 @@ def get_game_invites(accountId):
     try:
         account = retrieve_account_from_db(account_id)
 
-        game_invitations = json.loads(account.game_invitations)['game_invitation_ids']
+        game_invitations = account.game_invitations['game_invitation_ids']
         logger.debug(
             'found game invitations {} for account id {}'.format(
                 game_invitations,
@@ -121,7 +121,7 @@ def populate_account_info(account):
         account_id=account.id,
         active_player_ids=account.active_player_ids,
         pending_player_ids=account.pending_player_ids,
-        game_invitations=json.loads(account.game_invitations)
+        game_invitations=account.game_invitations
     )
     return account_info.to_dict()
 
@@ -132,8 +132,13 @@ def retrieve_account_from_db(id):
     logger.debug('Trying to retreive account id {} from db'.format(id))
     try:
         session = get_new_db_session()
+
         account = session.query(Account).filter(Account.id == id).first()
+        account.active_player_ids = json.loads(account.active_player_ids)
+        account.pending_player_ids = json.loads(account.pending_player_ids)
+        account.game_invitations = json.loads(account.game_invitations)
         logger.debug('found account for id {} in db'.format(id))
+
         return account
     except SQLAlchemyError:
         logger.error('unable to find account for id {} in db,'
