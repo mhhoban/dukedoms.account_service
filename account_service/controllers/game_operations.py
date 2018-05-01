@@ -27,7 +27,7 @@ def invite_accounts():
     """
     invite given accounts to a game of given id
     """
-    requested_accounts = request.get_json()['invitedPlayers']['invitedPlayers']
+    requested_accounts = request.get_json()['invitedPlayers']
     game_id = request.get_json()['gameId']
     logger.debug(
         'invite_accounts received request to invite players {} to game)id {}'.format(
@@ -59,7 +59,7 @@ def process_game_invite():
     """
     take in game reply object, pass along appropriate response to game service
     """
-    response_object = request.to_json()
+    response_object = request.get_json()
     logger.debug(
         'received game invite response {} from player id {} for game_id {}'.format(
             response_object['accept'],
@@ -85,8 +85,8 @@ def send_invite_accept(game_id=None, player_email=None):
             'gameId': game_id,
             'playerEmail': player_email
         }
-    )
-    assert_that(status, equal_to(200))
+    ).result()
+
     return result
 
 def send_invite_decline(game_id=None, player_email=None):
@@ -99,4 +99,3 @@ def send_invite_decline(game_id=None, player_email=None):
             'playerEmail': player_email
         }
     )
-    assert_that(status, equal_to(200))

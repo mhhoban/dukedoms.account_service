@@ -23,6 +23,6 @@ game_service_client = SwaggerClient.from_spec(
     load_file(
         'swagger/game_service_api.yaml',
     ),
-    origin_url=URLS['env'].game_service,
+    origin_url=URLS[env].game_service,
     config=config
 )
