@@ -27,7 +27,7 @@ def invite_accounts():
     """
     invite given accounts to a game of given id
     """
-    requested_accounts = request.get_json()['playerList']
+    requested_accounts = request.get_json()['invitedPlayers']['invitedPlayers']
     game_id = request.get_json()['gameId']
     logger.debug(
         'invite_accounts received request to invite players {} to game)id {}'.format(

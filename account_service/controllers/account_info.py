@@ -74,10 +74,13 @@ def get_game_invites(accountId):
 
     try:
         account = retrieve_account_from_db(account_id)
+
         game_invitations = json.loads(account.game_invitations)['game_invitation_ids']
-        logger.debug('found game invitations {} for account id {}').format(
-            game_invitations,
-            account_id
+        logger.debug(
+            'found game invitations {} for account id {}'.format(
+                game_invitations,
+                account_id
+            )
         )
         return {'gameIds': game_invitations}, status.HTTP_200_OK
     except NoSuchAccountException:

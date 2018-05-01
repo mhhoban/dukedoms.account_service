@@ -1,3 +1,5 @@
+import os
+
 from bravado.client import SwaggerClient
 from bravado.swagger_model import load_file
 
@@ -19,8 +21,8 @@ else:
 
 game_service_client = SwaggerClient.from_spec(
     load_file(
-        'swagger/dukedoms_game_service_api.yaml',
+        'swagger/game_service_api.yaml',
     ),
-    origin_url=context.env_urls.game_service,
+    origin_url=URLS['env'].game_service,
     config=config
 )
