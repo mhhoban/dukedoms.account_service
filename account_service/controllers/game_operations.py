@@ -72,12 +72,12 @@ def process_game_invite():
     )
     account_email = retrieve_account_email(response_object['accountId'])
 
+    # TODO cleaner method for doing this
+    session = get_new_db_session()
+    account = session.query(Account).filter(Account.id == response_object['accountId']).first()
+
     if response_object['accept']:
         packet = send_invite_accept(game_id=response_object['gameId'], player_email=account_email)
-
-        # TODO cleaner method for doing this
-        session = get_new_db_session()
-        account = session.query(Account).filter(Account.id == response_object['accountId']).first()
 
         pending_player_ids = json.loads(account.pending_player_ids)
         pending_player_ids['pending_player_ids'].append(packet.playerId)
@@ -90,11 +90,19 @@ def process_game_invite():
         session.query(Account).filter(Account.id == response_object['accountId']).update(
             {'game_invitations': json.dumps(game_invites)}
         )
+
         session.commit()
         session.close()
-
     else:
         send_invite_decline(game_id=response_object['gameId'], player_email=account_email)
+        game_invites = json.loads(account.game_invitations)
+        game_invites['game_invitation_ids'].remove(response_object['gameId'])
+        session.query(Account).filter(Account.id == response_object['accountId']).update(
+            {'game_invitations': json.dumps(game_invites)}
+        )
+
+        session.commit()
+        session.close()
 
     return None, status.HTTP_202_ACCEPTED
 
@@ -119,4 +127,4 @@ def send_invite_decline(game_id=None, player_email=None):
             'gameId': game_id,
             'playerEmail': player_email
         }
-    )
+    ).result()
