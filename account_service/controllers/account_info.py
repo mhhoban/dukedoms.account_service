@@ -39,13 +39,12 @@ def get_player_info(accountIds):
         return None, status.HTTP_404_NOT_FOUND
 
 # TODO Rename better
-def get_account_ids():
+def get_account_ids(requestedAccounts):
     """
     get player Id for given email addresses
     """
-    requested_accounts = request.args.get('requestedAccounts').split(',')
+    requested_accounts = requestedAccounts
     logger.debug('received get_account_ids request for {}'.format(requested_accounts))
-
     try:
         account_mappings = (
             {'accountIdMappings':

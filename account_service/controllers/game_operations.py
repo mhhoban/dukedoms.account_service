@@ -77,7 +77,11 @@ def process_game_invite():
     account = session.query(Account).filter(Account.id == response_object['accountId']).first()
 
     if response_object['accept']:
-        packet = send_invite_accept(game_id=response_object['gameId'], player_email=account_email)
+        packet = send_invite_accept(
+            game_id=response_object['gameId'],
+            player_email=account_email,
+            account_id=response_object['accountId']
+        )
 
         pending_player_ids = json.loads(account.pending_player_ids)
         pending_player_ids['pending_player_ids'].append(packet.playerId)
@@ -94,7 +98,11 @@ def process_game_invite():
         session.commit()
         session.close()
     else:
-        send_invite_decline(game_id=response_object['gameId'], player_email=account_email)
+        send_invite_decline(
+            game_id=response_object['gameId'],
+            player_email=account_email,
+            account_id=response_object['accountId']
+        )
         game_invites = json.loads(account.game_invitations)
         game_invites['game_invitation_ids'].remove(response_object['gameId'])
         session.query(Account).filter(Account.id == response_object['accountId']).update(
@@ -106,25 +114,27 @@ def process_game_invite():
 
     return None, status.HTTP_202_ACCEPTED
 
-def send_invite_accept(game_id=None, player_email=None):
+def send_invite_accept(game_id=None, player_email=None, account_id=None):
     """
     send player acceptance to game service and get welcome packet
     """
     result, status = game_service_client.gameOperations.accept_invite(
         gameInviteAcceptance={
             'gameId': game_id,
-            'playerEmail': player_email
+            'playerEmail': player_email,
+            'accountId': account_id
         }
     ).result()
     return result
 
-def send_invite_decline(game_id=None, player_email=None):
+def send_invite_decline(game_id=None, player_email=None, account_id=None):
     """
     send player game rejection to game service
     """
     result, status = game_service_client.gameOperations.decline_invite(
         gameInviteRejection={
             'gameId': game_id,
-            'playerEmail': player_email
+            'playerEmail': player_email,
+            'accountId': account_id
         }
     ).result()
