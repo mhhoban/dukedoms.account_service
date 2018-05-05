@@ -26,11 +26,29 @@ from account_service.shared.oas_clients import game_service_client
 
 logger = logging.getLogger('account_service_server')
 
+def new_hosted_game():
+    """
+    add pending player id for game player created
+    """
+    player_id = request.get_json()['playerId']
+    account_id = request.get_json()['accountId']
+    session = get_new_db_session()
+    account = session.query(Account).filter(Account.id == account_id).first()
+    pending_player_ids = json.loads(account.pending_player_ids)
+    pending_player_ids['pending_player_ids'].append(player_id)
+    session.query(Account).filter(Account.id == account_id).update(
+        {'pending_player_ids': json.dumps(pending_player_ids)}
+    )
+    session.commit()
+    session.close()
+    return None, status.HTTP_200_OK
+
+
 def invite_accounts():
     """
     invite given accounts to a game of given id
     """
-    requested_accounts = request.get_json()['invitedPlayers']
+    requested_accounts = request.get_json()['playerList']
     game_id = request.get_json()['gameId']
     logger.debug(
         'invite_accounts received request to invite players {} to game)id {}'.format(
