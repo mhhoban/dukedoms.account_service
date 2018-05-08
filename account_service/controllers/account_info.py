@@ -38,7 +38,6 @@ def get_player_info(accountIds):
         logger.debug('get_player_info unable for find account info')
         return None, status.HTTP_404_NOT_FOUND
 
-# TODO Rename better
 def get_account_ids(requestedAccounts):
     """
     get player Id for given email addresses

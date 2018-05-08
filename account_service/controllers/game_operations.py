@@ -21,6 +21,10 @@ from account_service.shared.account_operations import (
     retrieve_account_email,
     retrieve_account_id_from_db
 )
+from account_service.shared.game_service_calls import (
+    send_invite_accept,
+    send_invite_decline
+)
 from account_service.shared.oas_clients import game_service_client
 
 
@@ -131,28 +135,3 @@ def process_game_invite():
         session.close()
 
     return None, status.HTTP_202_ACCEPTED
-
-def send_invite_accept(game_id=None, player_email=None, account_id=None):
-    """
-    send player acceptance to game service and get welcome packet
-    """
-    result, status = game_service_client.gameOperations.accept_invite(
-        gameInviteAcceptance={
-            'gameId': game_id,
-            'playerEmail': player_email,
-            'accountId': account_id
-        }
-    ).result()
-    return result
-
-def send_invite_decline(game_id=None, player_email=None, account_id=None):
-    """
-    send player game rejection to game service
-    """
-    result, status = game_service_client.gameOperations.decline_invite(
-        gameInviteRejection={
-            'gameId': game_id,
-            'playerEmail': player_email,
-            'accountId': account_id
-        }
-    ).result()
