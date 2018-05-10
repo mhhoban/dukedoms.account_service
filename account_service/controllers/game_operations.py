@@ -1,13 +1,13 @@
 import json
 import logging
 
-import connexion
-from flask import Flask, request
+from flask import request
 from flask_api import status
 from hamcrest import assert_that, equal_to
 
 from account_service.shared.db import get_new_db_session
 from account_service.models.account import Account
+from account_service.models.account_proxy import AccountProxy
 from sqlalchemy.exc import SQLAlchemyError
 from account_service.exceptions.account_service_exceptions import (
     NoSuchAccountException
@@ -34,17 +34,13 @@ def new_hosted_game():
     """
     add pending player id for game player created
     """
+
     player_id = request.get_json()['playerId']
     account_id = request.get_json()['accountId']
-    session = get_new_db_session()
-    account = session.query(Account).filter(Account.id == account_id).first()
-    pending_player_ids = json.loads(account.pending_player_ids)
-    pending_player_ids['pending_player_ids'].append(player_id)
-    session.query(Account).filter(Account.id == account_id).update(
-        {'pending_player_ids': json.dumps(pending_player_ids)}
-    )
-    session.commit()
-    session.close()
+
+    account = AccountProxy(account_id)
+    account.add_pending_player_id(player_id)
+
     return None, status.HTTP_200_OK
 
 

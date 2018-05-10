@@ -1,11 +1,12 @@
 import json
 import logging
 
-import connexion
-from flask import Flask, request
+from flask import request
 from flask_api import status
 from account_service.shared.db import get_new_db_session
 from account_service.models.account import Account
+from account_service.models.account_proxy import AccountProxy
+
 from sqlalchemy.exc import SQLAlchemyError
 
 from account_service.shared.account_operations import (
@@ -27,16 +28,13 @@ def get_player_info(accountIds):
     """
     player_ids = accountIds
     logger.debug('received get_player_info request for {}'.format(player_ids))
-    try:
-        accounts = [
-            populate_account_info(retrieve_account_from_db(player_id))
-            for player_id in player_ids
-        ]
-        logger.debug('get_player_info returning account info {}'.format(accounts))
-        return AccountInfoList(player_accounts=accounts).to_dict(), status.HTTP_200_OK
-    except NoSuchAccountException:
-        logger.debug('get_player_info unable for find account info')
-        return None, status.HTTP_404_NOT_FOUND
+
+    account_info_list = []
+    for id in player_ids:
+        account = AccountProxy(id)
+        account_info_list.append(account.get_account_info())
+
+    return account_info_list, status.HTTP_200_OK
 
 def get_account_ids(requestedAccounts):
     """
@@ -70,19 +68,9 @@ def get_game_invites(accountId):
     account_id = accountId
     logger.debug('received get_game_invites request for {}'.format(account_id))
 
-    try:
-        account = retrieve_account_from_db(account_id)
+    account = AccountProxy(account_id)
 
-        game_invitations = account.game_invitations['game_invitation_ids']
-        logger.debug(
-            'found game invitations {} for account id {}'.format(
-                game_invitations,
-                account_id
-            )
-        )
-        return {'gameIds': game_invitations}, status.HTTP_200_OK
-    except NoSuchAccountException:
-        return status.HTTP_404_NOT_FOUND
+    return account.get_account_info()['gameInvitations'], status.HTTP_200_OK
 
 
 def verify_accounts():
@@ -108,20 +96,6 @@ def verify_accounts():
             )
     )
     return unverified_players.to_dict(), status.HTTP_200_OK
-
-
-def populate_account_info(account):
-    """
-    populate swagger account info object with db account model data
-    """
-    account_info = AccountInfoListPlayerAccounts(
-        email=account.email,
-        account_id=account.id,
-        active_player_ids=account.active_player_ids,
-        pending_player_ids=account.pending_player_ids,
-        game_invitations=account.game_invitations
-    )
-    return account_info.to_dict()
 
 def retrieve_account_from_db(id):
     """
